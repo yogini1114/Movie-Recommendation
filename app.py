@@ -6,7 +6,7 @@ import numpy as np   # 🔴 CHANGE HERE: numpy import zaroori hai
 
 # ---------------- FETCH POSTER FUNCTION ----------------
 def fetch_poster(movie_id):
-    url = f"https://api.themoviedb.org/3/movie/{movie_id}?api_key=YOUR_API_KEY&language=en-US"
+    url = f"https://api.themoviedb.org/3/movie/{movie_id}?api_key=fa28d331c77722cbee5fad253b59dda8&language=en-US"
     data = requests.get(url).json()
     return "https://image.tmdb.org/t/p/w500/" + data['poster_path']
 
