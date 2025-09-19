@@ -26,8 +26,10 @@ download_from_drive(similarity_id, similarity_file)
 
 # Load both
 movies_dict = pickle.load(open(movie_dict_file, "rb"))
+movies=pd.DataFrame(movies_dict)
 similarity = pickle.load(open(similarity_file, "rb"))
-
+movies[['movie_id','title']].to_csv("movies.csv", index=False)
+np.save("similarity.npy",similarity.astype(float))
 TMDB_API_KEY = os.getenv("TMDB_API_KEY")
 if not TMDB_API_KEY:
     raise RuntimeError("TMDB_API_KEY not set in environment")
