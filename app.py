@@ -52,6 +52,13 @@ def fetch_poster(movie_id):
 
 
 def recommend(movie):
+    movie = movie.strip().lower()
+    movies['title'] = movies['title'].str.strip().str.lower()
+
+    ### FIXED HERE: validate movie
+    if movie not in movies['title'].values:
+        st.error(f"Movie '{movie}' not found in database.")
+        return [], []
     movie_index = movies[movies['title']==movie].index[0]
     movie_index=int(movie_index)
     distances = similarity[movie_index]
