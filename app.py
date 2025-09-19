@@ -1,35 +1,14 @@
 import streamlit as st
-import pickle
+
 import pandas as pd
 import requests
-import gdown
+
 import os
 import numpy as np
 
-def download_from_drive(file_id, output):
-    url = f"https://drive.google.com/uc?id={file_id}"
-    if not os.path.exists(output):
-        print(f"Downloading {output}...")
-        gdown.download(url, output, quiet=False)
-
-# 🔹 Replace these IDs with your actual ones
-movie_dict_id = "13ISaA8p6gl90P2mSbUby6UAtRFNKiY5d"
-similarity_id = "1_RcwC5YySGtNAHwo-9EZmbwXO37R-hTm"
-
-# File names
-movie_dict_file = "movie_dict.pkl"
-similarity_file = "similarity.pkl"
-
-# Download both
-download_from_drive(movie_dict_id, movie_dict_file)
-download_from_drive(similarity_id, similarity_file)
-
-# Load both
-movies_dict = pickle.load(open(movie_dict_file, "rb"))
-movies=pd.DataFrame(movies_dict)
-similarity = pickle.load(open(similarity_file, "rb"))
-movies[['movie_id','title']].to_csv("movies.csv", index=False)
-np.save("similarity.npy",similarity.astype(float))
+movies=pd.read_csv("movies.csv")
+similarity = np.load("similarity.npy")
+movies=movies.reset_index(drop=True)
 TMDB_API_KEY = os.getenv("TMDB_API_KEY")
 if not TMDB_API_KEY:
     raise RuntimeError("TMDB_API_KEY not set in environment")
@@ -75,10 +54,7 @@ def recommend(movie):
 
     return recommended_movies,recommend_movies_posters
 
-movies_dict=pickle.load(open('movie_dict.pkl', 'rb'))
-movies=pd.DataFrame(movies_dict).reset_index(drop=True)
-similarity=pickle.load(open('similarity.pkl', 'rb'))
-similarity=np.array(similarity)
+
 st.title('Movie Recommender System')
 selected_movie_name= st.selectbox(
 'ENTER A MOVIE',
