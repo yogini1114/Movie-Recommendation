@@ -7,7 +7,7 @@ TMDB_API_KEY = os.getenv("TMDB_API_KEY")
 if not TMDB_API_KEY:
     raise RuntimeError("TMDB_API_KEY not set in environment")
 
-def fetch_poster(url = f"https://api.themoviedb.org/3/movie/{movie_id}?api_key=fa28d331c77722cbee5fad253b59dda8"):
+def fetch_poster(movie_id):
 
     try:
         url = f"https://api.themoviedb.org/3/movie/{movie_id}?api_key=fa28d331c77722cbee5fad253b59dda8"
