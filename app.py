@@ -2,7 +2,31 @@ import streamlit as st
 import pickle
 import pandas as pd
 import requests
+import gdown
 import os
+
+def download_from_drive(file_id, output):
+    url = f"https://drive.google.com/uc?id={file_id}"
+    if not os.path.exists(output):
+        print(f"Downloading {output}...")
+        gdown.download(url, output, quiet=False)
+
+# 🔹 Replace these IDs with your actual ones
+movie_dict_id = "13ISaA8p6gl90P2mSbUby6UAtRFNKiY5d"
+similarity_id = "1_RcwC5YySGtNAHwo-9EZmbwXO37R-hTm"
+
+# File names
+movie_dict_file = "movie_dict.pkl"
+similarity_file = "similarity.pkl"
+
+# Download both
+download_from_drive(movie_dict_id, movie_dict_file)
+download_from_drive(similarity_id, similarity_file)
+
+# Load both
+movies_dict = pickle.load(open(movie_dict_file, "rb"))
+similarity = pickle.load(open(similarity_file, "rb"))
+
 TMDB_API_KEY = os.getenv("TMDB_API_KEY")
 if not TMDB_API_KEY:
     raise RuntimeError("TMDB_API_KEY not set in environment")
