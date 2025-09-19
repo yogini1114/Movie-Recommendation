@@ -2,64 +2,106 @@ import streamlit as st
 import pickle
 import pandas as pd
 import requests
-import numpy as np   # 🔴 CHANGE HERE: numpy import zaroori hai
+import gdown
+import os
+import numpy as np
 
-# ---------------- FETCH POSTER FUNCTION ----------------
+def download_from_drive(file_id, output):
+    url = f"https://drive.google.com/uc?id={file_id}"
+    if not os.path.exists(output):
+        print(f"Downloading {output}...")
+        gdown.download(url, output, quiet=False)
+
+# 🔹 Replace these IDs with your actual ones
+movie_dict_id = "13ISaA8p6gl90P2mSbUby6UAtRFNKiY5d"
+similarity_id = "1_RcwC5YySGtNAHwo-9EZmbwXO37R-hTm"
+
+# File names
+movie_dict_file = "movie_dict.pkl"
+similarity_file = "similarity.pkl"
+
+# Download both
+download_from_drive(movie_dict_id, movie_dict_file)
+download_from_drive(similarity_id, similarity_file)
+
+# Load both
+movies_dict = pickle.load(open(movie_dict_file, "rb"))
+similarity = pickle.load(open(similarity_file, "rb"))
+
+TMDB_API_KEY = os.getenv("TMDB_API_KEY")
+if not TMDB_API_KEY:
+    raise RuntimeError("TMDB_API_KEY not set in environment")
+
 def fetch_poster(movie_id):
-    url = f"https://api.themoviedb.org/3/movie/{movie_id}?api_key=fa28d331c77722cbee5fad253b59dda8&language=en-US"
-    data = requests.get(url).json()
-    return "https://image.tmdb.org/t/p/w500/" + data['poster_path']
 
-# ---------------- LOAD FILES ----------------
-# 🔴 CHANGE HERE: make sure movies.pkl and similarity.pkl correct banaye ho (jaise maine upar steps me bataya)
-movies = pickle.load(open("movies.pkl", "rb"))
-similarity = pickle.load(open("similarity.pkl", "rb"))
-similarity = np.array(similarity)   # 🔴 CHANGE HERE: ensure numpy array
+    try:
+        url = f"https://api.themoviedb.org/3/movie/{movie_id}?api_key=fa28d331c77722cbee5fad253b59dda8"
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()
+        data = response.json()
+        poster_path = data.get('poster_path')
 
-# Reset index to avoid mismatch
-movies = pd.DataFrame(movies).reset_index(drop=True)
+        if poster_path:
+            return f"https://image.tmdb.org/t/p/w500{poster_path}"
+        else:
+            # Use properly URL encoded placeholder text
+            return "https://via.placeholder.com/300x450?text=No%20Image%20Available"
+    except requests.exceptions.RequestException as e:
+        print(f"Error fetching poster for movie_id {movie_id}: {e}")
+        return "https://via.placeholder.com/300x450?text=No%20Image%20Available"
 
-# ---------------- RECOMMEND FUNCTION ----------------
+
+
 def recommend(movie):
     movie = movie.strip().lower()
     movies['title'] = movies['title'].str.strip().str.lower()
 
+    ### FIXED HERE: validate movie
     if movie not in movies['title'].values:
         st.error(f"Movie '{movie}' not found in database.")
         return [], []
-
-    movie_index = movies[movies['title'] == movie].index[0]
-
-    # 🔴 CHANGE HERE: convert distances to float
+    movie_index = movies[movies['title']==movie].index[0]
     distances = similarity[movie_index].astype(float)
-
-    # sort with distance
-    movies_list = sorted(
-        list(enumerate(distances)),
-        reverse=True,
-        key=lambda x: x[1]
-    )[1:6]
+    movies_list = sorted(list(enumerate(distances)), reverse=True, key=lambda x: x[1])[1:6]
 
     recommended_movies = []
-    recommended_posters = []
-    for i in movies_list:
-        movie_id = int(movies.iloc[i[0]].movie_id)  # 🔴 CHANGE HERE: ensure movie_id column exists in movies.pkl
+    recommend_movies_posters = []
+    for i in movies_list:  # skip the first one (the movie itself)
+        movie_id = int(movies.iloc[i[0]].movie_id)
         recommended_movies.append(movies.iloc[i[0]].title)
-        recommended_posters.append(fetch_poster(movie_id))
+        recommend_movies_posters.append(fetch_poster(movie_id))
 
-    return recommended_movies, recommended_posters
+    return recommended_movies,recommend_movies_posters
 
-# ---------------- STREAMLIT UI ----------------
-st.title("Movie Recommender System")
+movies_dict=pickle.load(open('movie_dict.pkl', 'rb'))
+movies=pd.DataFrame(movies_dict).reset_index(drop=True)
+similarity=pickle.load(open('similarity.pkl', 'rb'))
+similarity=np.array(similarity)
+st.title('Movie Recommender System')
+selected_movie_name= st.selectbox(
+'ENTER A MOVIE',
+movies['title'].values)
 
-selected_movie_name = st.text_input("ENTER A MOVIE")
+if st.button('RECOMMEND'):
+    names,posters=recommend(selected_movie_name)
 
-if st.button("RECOMMEND"):
-    if selected_movie_name:
-        names, posters = recommend(selected_movie_name)
-        if names:
-            cols = st.columns(5)
-            for idx, col in enumerate(cols):
-                with col:
-                    st.text(names[idx])
-                    st.image(posters[idx])
+    col1, col2, col3, col4, col5 = st.columns(5)
+
+    with col1:
+        st.text(names[0])
+        st.image(posters[0])
+    with col2:
+        st.text(names[1])
+        st.image(posters[1])
+    with col3:
+        st.text(names[2])
+        st.image(posters[2])
+    with col4:
+        st.text(names[3])
+        st.image(posters[3])
+    with col5:
+        st.text(names[4])
+        st.image(posters[4])
+
+
+
