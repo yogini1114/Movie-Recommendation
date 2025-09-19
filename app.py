@@ -60,7 +60,7 @@ def recommend(movie):
         st.error(f"Movie '{movie}' not found in database.")
         return [], []
     movie_index = movies[movies['title']==movie].index[0]
-    distances = similarity.iloc[movie_index]
+    distances = similarity[movie_index]
     movies_list = sorted(list(enumerate(distances)), reverse=True, key=lambda x: x[1])[1:6]
 
     recommended_movies = []
@@ -75,7 +75,7 @@ def recommend(movie):
 movies_dict=pickle.load(open('movie_dict.pkl', 'rb'))
 movies=pd.DataFrame(movies_dict).reset_index(drop=True)
 similarity=pickle.load(open('similarity.pkl', 'rb'))
-similarity=pd.DataFrame(similarity).values
+similarity=np.array(similarity)
 st.title('Movie Recommender System')
 selected_movie_name= st.selectbox(
 'ENTER A MOVIE',
