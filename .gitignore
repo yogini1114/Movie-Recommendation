@@ -8,5 +8,6 @@ venv/
 myvenv/
 
 # Ignore data files if not needed in repo
-
+*.npy
+*.csv
 
