@@ -1,20 +1,8 @@
 import streamlit as st
-
+import pickle
 import pandas as pd
 import requests
-
-import os
-import numpy as np
-
-movies=pd.read_csv("movies.csv")
-similarity = np.load("similarity.npy")
-movies=movies.reset_index(drop=True)
-TMDB_API_KEY = os.getenv("TMDB_API_KEY")
-if not TMDB_API_KEY:
-    raise RuntimeError("TMDB_API_KEY not set in environment")
-
 def fetch_poster(movie_id):
-
     try:
         url = f"https://api.themoviedb.org/3/movie/{movie_id}?api_key=fa28d331c77722cbee5fad253b59dda8"
         response = requests.get(url, timeout=10)
@@ -34,30 +22,37 @@ def fetch_poster(movie_id):
 
 
 def recommend(movie):
-    movie = movie.strip().lower()
-    movies['title'] = movies['title'].str.strip().str.lower()
-
-    ### FIXED HERE: validate movie
-    if movie not in movies['title'].values:
-        st.error(f"Movie '{movie}' not found in database.")
-        return [], []
     movie_index = movies[movies['title']==movie].index[0]
-    distances = similarity[movie_index].astype(float)
+    distances = similarity[movie_index]
     movies_list = sorted(list(enumerate(distances)), reverse=True, key=lambda x: x[1])[1:6]
 
     recommended_movies = []
     recommend_movies_posters = []
     for i in movies_list:  # skip the first one (the movie itself)
-        movie_id = int(movies.iloc[i[0]].movie_id)
+        movie_id = movies.iloc[i[0]].movie_id
         recommended_movies.append(movies.iloc[i[0]].title)
         recommend_movies_posters.append(fetch_poster(movie_id))
 
     return recommended_movies,recommend_movies_posters
 
+    # Find the index of the movie
+    movie_row = movies[movies['title'] == movie]
+    if movie_row.empty:
+        return ["Movie not found!"]
 
+       # ✅ FIXED
+
+
+
+
+
+
+movies_dict=pickle.load(open('movie_dict.pkl', 'rb'))
+movies=pd.DataFrame(movies_dict)
+similarity=pickle.load(open('similarity.pkl', 'rb'))
 st.title('Movie Recommender System')
 selected_movie_name= st.selectbox(
-'ENTER A MOVIE',
+'Select Movie Recommender System',
 movies['title'].values)
 
 if st.button('RECOMMEND'):
